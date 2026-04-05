@@ -633,6 +633,7 @@ class PipelineManager:
             "scribble",
             "gray",
             "optical-flow",
+            "gemma-prompt",
         }
 
         if pipeline_class is not None and pipeline_id not in BUILTIN_PIPELINES:
@@ -1094,6 +1095,25 @@ class PipelineManager:
                 device=get_device(),
             )
             logger.info("OpticalFlow pipeline initialized")
+            return pipeline
+
+        elif pipeline_id == "gemma-prompt":
+            from scope.core.pipelines import GemmaPromptPipeline
+            from scope.core.pipelines.gemma_prompt.schema import (
+                DEFAULT_SYSTEM_INSTRUCTION,
+            )
+
+            params = load_params or {}
+            pipeline = GemmaPromptPipeline(
+                device=get_device(),
+                dtype=torch.bfloat16,
+                temperature=params.get("temperature", 0.7),
+                max_tokens=params.get("max_tokens", 256),
+                system_instruction=params.get(
+                    "system_instruction", DEFAULT_SYSTEM_INSTRUCTION
+                ),
+            )
+            logger.info("Gemma Prompt Engine pipeline initialized")
             return pipeline
         else:
             raise ValueError(f"Invalid pipeline ID: {pipeline_id}")

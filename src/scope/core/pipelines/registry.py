@@ -173,6 +173,7 @@ def _register_pipelines():
         ("scribble", ".scribble.pipeline", "ScribblePipeline"),
         ("gray", ".gray.pipeline", "GrayPipeline"),
         ("optical_flow", ".optical_flow.pipeline", "OpticalFlowPipeline"),
+        ("gemma_prompt", ".gemma_prompt.pipeline", "GemmaPromptPipeline"),
     ]
 
     # Try to import and register each pipeline
