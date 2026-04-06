@@ -386,7 +386,9 @@ class WebRTCManager:
         def _run_analysis():
             try:
                 # Decode base64 image
-                image_bytes = base64.b64decode(image_b64)
+                # Strip Data URL prefix if present (e.g. "data:image/jpeg;base64,...")
+                b64_data = image_b64.split(",")[1] if "," in image_b64 else image_b64
+                image_bytes = base64.b64decode(b64_data)
                 image = Image.open(io.BytesIO(image_bytes)).convert("RGB")
 
                 # Get the Gemma prompt pipeline

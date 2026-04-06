@@ -64,7 +64,8 @@ class GemmaPromptPipeline(Pipeline):
         self.processor = AutoProcessor.from_pretrained(MODEL_ID)
         self.model = AutoModelForImageTextToText.from_pretrained(
             MODEL_ID,
-            device_map="cuda",
+            device_map="auto",
+            torch_dtype=self.dtype,
             quantization_config=quantization_config,
         )
         self.model.eval()
@@ -89,7 +90,7 @@ class GemmaPromptPipeline(Pipeline):
             frames = torch.stack([f.squeeze(0) for f in video], dim=0)
             frames = frames.float() / 255.0
             # Output shape: THWC with T=num_frames
-            frames = frames.unsqueeze(1) if frames.dim() == 3 else frames
+            frames = frames.unsqueeze(-1) if frames.dim() == 3 else frames
             return {"video": frames}
 
         return {"video": video}

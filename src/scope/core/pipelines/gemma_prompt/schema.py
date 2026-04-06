@@ -34,7 +34,15 @@ class GemmaPromptConfig(BasePipelineConfig):
     artifacts: ClassVar[list] = [
         HuggingfaceRepoArtifact(
             repo_id="google/gemma-4-e4b-it",
-            files=["config.json", "model.safetensors.index.json"],
+            files=[
+                "config.json",
+                "model.safetensors.index.json",
+                "tokenizer.json",
+                "tokenizer_config.json",
+                "preprocessor_config.json",
+                "generation_config.json",
+                "special_tokens_map.json",
+            ],
         ),
     ]
 
