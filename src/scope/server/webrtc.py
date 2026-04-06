@@ -1,4 +1,6 @@
 import asyncio
+import base64
+import io
 import json
 import logging
 import os
@@ -6,6 +8,8 @@ import uuid
 
 # Type checking imports
 from typing import TYPE_CHECKING, Any
+
+from PIL import Image
 
 from aiortc import (
     MediaStreamTrack,
@@ -298,6 +302,14 @@ class WebRTCManager:
                     try:
                         # Parse the JSON message
                         data = json.loads(message)
+
+                        # Route analyze_frame requests to the Gemma VLM pipeline
+                        if data.get("type") == "analyze_frame":
+                            self._handle_analyze_frame(
+                                data, pipeline_manager, notification_sender
+                            )
+                            return
+
                         logger.info(f"Received parameter update: {data}")
 
                         # Check for paused parameter and call pause() method on video track
@@ -350,6 +362,49 @@ class WebRTCManager:
             if "session" in locals():
                 await self.remove_session(session.id)
             raise
+
+    def _handle_analyze_frame(
+        self,
+        data: dict,
+        pipeline_manager: PipelineManager,
+        notification_sender: NotificationSender,
+    ):
+        """Handle an analyze_frame request from the data channel.
+
+        Decodes the base64 image, runs the Gemma VLM pipeline, and sends
+        the resulting prompt back via the data channel.
+        """
+        image_b64 = data.get("image")
+        if not image_b64:
+            notification_sender.call(
+                {"type": "prompt_error", "error": "No image data provided"}
+            )
+            return
+
+        loop = asyncio.get_event_loop()
+
+        def _run_analysis():
+            try:
+                # Decode base64 image
+                # Strip Data URL prefix if present (e.g. "data:image/jpeg;base64,...")
+                b64_data = image_b64.split(",")[1] if "," in image_b64 else image_b64
+                image_bytes = base64.b64decode(b64_data)
+                image = Image.open(io.BytesIO(image_bytes)).convert("RGB")
+
+                # Get the Gemma prompt pipeline
+                gemma_pipeline = pipeline_manager.get_pipeline_by_id("gemma-prompt")
+                prompt = gemma_pipeline.analyze_frame(image)
+
+                notification_sender.call(
+                    {"type": "prompt_result", "prompt": prompt}
+                )
+            except Exception as e:
+                logger.error(f"Error analyzing frame: {e}")
+                notification_sender.call(
+                    {"type": "prompt_error", "error": str(e)}
+                )
+
+        loop.run_in_executor(None, _run_analysis)
 
     async def handle_offer_with_relay(
         self, request: WebRTCOfferRequest, cloud_manager: "CloudConnectionManager"

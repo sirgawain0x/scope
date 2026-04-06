@@ -52,6 +52,10 @@ def __getattr__(name):
         from .optical_flow.pipeline import OpticalFlowPipeline
 
         return OpticalFlowPipeline
+    elif name == "GemmaPromptPipeline":
+        from .gemma_prompt.pipeline import GemmaPromptPipeline
+
+        return GemmaPromptPipeline
     # Config classes
     elif name == "BasePipelineConfig":
         from .base_schema import BasePipelineConfig
@@ -97,6 +101,10 @@ def __getattr__(name):
         from .gray.schema import GrayConfig
 
         return GrayConfig
+    elif name == "GemmaPromptConfig":
+        from .gemma_prompt.schema import GemmaPromptConfig
+
+        return GemmaPromptConfig
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
 
 
@@ -114,6 +122,7 @@ __all__ = [
     "ScribblePipeline",
     "GrayPipeline",
     "OpticalFlowPipeline",
+    "GemmaPromptPipeline",
     # Config classes
     "BasePipelineConfig",
     "LongLiveConfig",
@@ -126,4 +135,5 @@ __all__ = [
     "RIFEConfig",
     "ScribbleConfig",
     "GrayConfig",
+    "GemmaPromptConfig",
 ]
